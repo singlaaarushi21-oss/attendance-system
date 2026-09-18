@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AttendEase — Attendance Management</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#697386;--primary:#4f46e5;--primary2:#6366f1;--border:#e7eaf0;--green:#159957;--red:#dc3545;--shadow:0 8px 25px rgba(20,28,55,.07)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:245px;background:#171b2d;color:white;padding:24px 16px;position:fixed;inset:0 auto 0 0}.brand{font-size:21px;font-weight:800;padding:8px 12px 28px}.brand span{color:#8b8dfc}.nav button{display:block;width:100%;border:0;background:transparent;color:#cdd2e4;text-align:left;padding:13px 14px;border-radius:10px;margin:4px 0;cursor:pointer}.nav button.active,.nav button:hover{background:#2a2f49;color:#fff}.main{margin-left:245px;width:calc(100% - 245px);padding:30px;max-width:1500px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}.top h1{margin:0;font-size:28px}.top p{margin:5px 0 0;color:var(--muted)}.btn{border:0;border-radius:9px;padding:10px 15px;cursor:pointer;font-weight:650}.primary{background:var(--primary);color:white}.secondary{background:#eef0f7;color:#30384a}.danger{background:#feecef;color:#b42332}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:17px}.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)}.stat .label{color:var(--muted);font-size:13px}.stat .value{font-size:28px;font-weight:800;margin-top:7px}.section{margin-top:22px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.section-title h2{font-size:18px;margin:0}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:13px 10px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}.table th{color:var(--muted);font-weight:650}.empty{padding:35px;text-align:center;color:var(--muted)}.page{display:none}.page.active{display:block}.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}.field label{display:block;font-size:13px;font-weight:650;margin-bottom:6px}.field input,.field select{width:100%;padding:11px 12px;border:1px solid #dfe3eb;border-radius:9px;background:white;outline:none}.field input:focus,.field select:focus{border-color:var(--primary)}.modal{position:fixed;inset:0;background:rgba(10,15,30,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:5}.modal.show{display:flex}.modal-box{background:white;border-radius:15px;width:min(520px,100%);padding:24px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal-head h3{margin:0}.close{border:0;background:#f1f3f7;border-radius:50%;width:32px;height:32px;cursor:pointer}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}.pill{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700}.present{background:#e8f7ef;color:#087443}.absent{background:#fdecee;color:#b42332}.rate{font-weight:800}.attendance-row{display:grid;grid-template-columns:70px 1fr 100px;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--border)}.toggle{display:flex;gap:5px}.toggle button{padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:white;cursor:pointer;font-size:12px}.toggle .selected-present{background:#dff5e9;color:#087443;border-color:#a7dfc1}.toggle .selected-absent{background:#fde3e6;color:#b42332;border-color:#f1b5bc}.toolbar{display:flex;gap:10px;flex-wrap:wrap}.toolbar input,.toolbar select{padding:10px;border:1px solid #dfe3eb;border-radius:9px;background:#fff}.note{font-size:13px;color:var(--muted);margin-top:8px}.toast{position:fixed;right:20px;bottom:20px;background:#202637;color:white;padding:12px 16px;border-radius:9px;display:none;z-index:10}.mobile-menu{display:none}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.sidebar{width:210px}.main{margin-left:210px;width:calc(100% - 210px)}}
+@media(max-width:650px){.sidebar{position:fixed;transform:translateX(-100%);transition:.2s;width:245px;z-index:20}.sidebar.open{transform:translateX(0)}.main{margin-left:0;width:100%;padding:18px}.mobile-menu{display:inline-block}.grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.top h1{font-size:23px}.attendance-row{grid-template-columns:55px 1fr}.attendance-row .rate{display:none}}
+
+.login-screen{position:fixed;inset:0;background:#f5f7fb;display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
+.login-card{width:min(430px,100%);background:white;border:1px solid var(--border);border-radius:18px;padding:32px;box-shadow:var(--shadow)}
+.login-brand{text-align:center;font-size:28px;font-weight:850;margin-bottom:8px}.login-brand span{color:var(--primary2)}
+.login-sub{text-align:center;color:var(--muted);margin-bottom:25px}.login-error{color:#b42332;background:#fdecee;padding:10px;border-radius:8px;font-size:13px;margin-top:12px;display:none}
+.user-badge{font-size:12px;background:#eef0ff;color:#4f46e5;padding:6px 9px;border-radius:999px;font-weight:700}.parent-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:15px}.mini-stat{background:#f7f8fc;border:1px solid var(--border);border-radius:10px;padding:14px}.mini-stat .v{font-size:22px;font-weight:800;margin-top:4px}@media(max-width:650px){.parent-summary{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">Attend<span>Ease</span></div>
+    <div class="login-sub">Attendance Management System</div>
+    <div class="field"><label>Login ID</label><input id="loginId" inputmode="numeric" autocomplete="username" placeholder="e.g. 124122 or 98701"></div>
+    <div class="field" style="margin-top:14px"><label>PIN</label><input id="loginPin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Enter your PIN"></div>
+    <button class="btn primary" style="width:100%;margin-top:18px" onclick="login()">Login</button><div class="note" style="text-align:center">Use the ID and PIN given by the teacher.</div>
+    <div class="login-error" id="loginError"></div>
+    <div class="note" style="text-align:center;margin-top:18px">Teacher IDs begin with 1241 · Parent IDs begin with 987</div>
+  </div>
+</div>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand">Attend<span>Ease</span></div>
+  <div class="nav">
+    <button class="active" data-page="dashboard">🏠 Dashboard</button>
+    <button data-page="students">👩‍🎓 Students</button>
+    <button data-page="subjects">📚 Subjects</button>
+    <button data-page="attendance">✅ Take Attendance</button>
+    <button data-page="history">📊 Attendance History</button>
+    <button data-page="parents">👨‍👩‍👧 Parents</button>
+    <button data-page="parent">👨‍👩‍👧 Parent Portal</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div><button class="btn secondary mobile-menu" onclick="toggleMenu()">☰</button> <h1 id="pageTitle" style="display:inline">Dashboard</h1><p id="pageSub">Overview of your attendance system</p></div>
+    <div style="display:flex;align-items:center;gap:10px"><span class="user-badge" id="roleBadge"></span><button class="btn secondary" onclick="logout()">Logout</button><span id="topAction"></span></div>
+  </div>
+
+  <section class="page active" id="dashboard">
+    <div class="grid">
+      <div class="card stat"><div class="label">Total Students</div><div class="value" id="statStudents">0</div></div>
+      <div class="card stat"><div class="label">Total Subjects</div><div class="value" id="statSubjects">0</div></div>
+      <div class="card stat"><div class="label">Attendance Records</div><div class="value" id="statRecords">0</div></div>
+      <div class="card stat"><div class="label">Overall Attendance</div><div class="value" id="statRate">—</div></div>
+    </div>
+    <div class="section card">
+      <div class="section-title"><h2>Quick actions</h2></div>
+      <div class="toolbar">
+        <button class="btn primary" onclick="showPage('attendance')">✅ Take Attendance</button>
+        <button class="btn secondary" onclick="openStudentModal()">+ Add Student</button>
+        <button class="btn secondary" onclick="openSubjectModal()">+ Add Subject</button>
+      </div>
+    </div>
+    <div class="section card">
+      <div class="section-title"><h2>Subject attendance</h2></div>
+      <div id="dashboardSubjects"></div>
+    </div>
+  </section>
+
+  <section class="page" id="students">
+    <div class="card">
+      <div class="section-title"><h2>Student list</h2><button class="btn primary" onclick="openStudentModal()">+ Add Student</button></div>
+      <div class="toolbar"><input id="studentSearch" placeholder="Search by name or roll number..." oninput="renderStudents()"></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Roll No.</th><th>Name</th><th>Email</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="page" id="subjects">
+    <div class="card">
+      <div class="section-title"><h2>Subject list</h2><button class="btn primary" onclick="openSubjectModal()">+ Add Subject</button></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Code</th><th>Subject</th><th>Students</th><th>Actions</th></tr></thead><tbody id="subjectsBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="page" id="attendance">
+    <div class="card">
+      <div class="section-title"><h2>Mark attendance</h2></div>
+      <div class="form-grid">
+        <div class="field"><label>Subject</label><select id="attendanceSubject" onchange="renderAttendance()"></select></div>
+        <div class="field"><label>Date</label><input type="date" id="attendanceDate" onchange="renderAttendance()"></div>
+      </div>
+      <div class="note">Select Present or Absent for every student, then save.</div>
+      <div class="section" id="attendanceList"></div>
+      <div class="actions"><button class="btn primary" onclick="saveAttendance()">Save Attendance</button></div>
+    </div>
+  </section>
+
+  <section class="page" id="history">
+    <div class="card">
+      <div class="section-title"><h2>Attendance history</h2></div>
+      <div class="toolbar">
+        <select id="historySubject" onchange="renderHistory()"></select>
+        <input type="date" id="historyDate" onchange="renderHistory()">
+      </div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Subject</th><th>Present</th><th>Absent</th><th>Rate</th><th></th></tr></thead><tbody id="historyBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="page" id="parents">
+    <div class="card">
+      <div class="section-title"><h2>Parent Accounts</h2><button class="btn primary" onclick="openParentModal()">+ Add Parent</button></div>
+      <p class="note" style="margin-top:0">Create a unique parent ID, link it to a child, and set a PIN. Parent IDs start at 98701.</p>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Parent ID</th><th>Parent</th><th>Child</th><th>Actions</th></tr></thead><tbody id="parentsBody"></tbody></table></div>
+    </div>
+  </section>
+  <section class="page" id="parent">
+    <div class="card">
+      <div class="section-title">
+        <div>
+          <h2 id="parentWelcome">Parent Portal</h2>
+          <p class="note" style="margin-top:5px">Attendance for your linked child</p>
+        </div>
+        <span class="pill present" id="parentOverallPill">—</span>
+      </div>
+      <div id="parentChildSummary"></div>
+    </div>
+
+    <div class="section card">
+      <div class="section-title"><h2>Subject-wise attendance</h2></div>
+      <div id="parentSubjectAttendance"></div>
+    </div>
+
+    <div class="section card">
+      <div class="section-title"><h2>Recent attendance</h2></div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Date</th><th>Subject</th><th>Status</th></tr></thead>
+          <tbody id="parentHistoryBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<div class="modal" id="studentModal"><div class="modal-box">
+  <div class="modal-head"><h3 id="studentModalTitle">Add Student</h3><button class="close" onclick="closeModal('studentModal')">×</button></div>
+  <div class="form-grid">
+    <div class="field"><label>Roll number *</label><input id="studentRoll"></div>
+    <div class="field"><label>Name *</label><input id="studentName"></div>
+    <div class="field" style="grid-column:1/-1"><label>Email</label><input id="studentEmail" type="email"></div>
+  </div>
+  <div class="actions"><button class="btn secondary" onclick="closeModal('studentModal')">Cancel</button><button class="btn primary" onclick="saveStudent()">Save Student</button></div>
+</div></div>
+
+<div class="modal" id="subjectModal"><div class="modal-box">
+  <div class="modal-head"><h3 id="subjectModalTitle">Add Subject</h3><button class="close" onclick="closeModal('subjectModal')">×</button></div>
+  <div class="form-grid">
+    <div class="field"><label>Subject code *</label><input id="subjectCode" placeholder="e.g. BME302"></div>
+    <div class="field"><label>Subject name *</label><input id="subjectName" placeholder="e.g. Biomedical Sensors"></div>
+  </div>
+  <div class="note">Students can be assigned to this subject after it is created.</div>
+  <div class="actions"><button class="btn secondary" onclick="closeModal('subjectModal')">Cancel</button><button class="btn primary" onclick="saveSubject()">Save Subject</button></div>
+</div></div>
+
+
+<div class="modal" id="parentModal"><div class="modal-box">
+  <div class="modal-head"><h3 id="parentModalTitle">Add Parent</h3><button class="close" onclick="closeModal('parentModal')">×</button></div>
+  <div class="form-grid">
+    <div class="field"><label>Parent name *</label><input id="parentName" placeholder="e.g. Mrs Sharma"></div>
+    <div class="field"><label>Child *</label><select id="parentStudent"></select></div>
+    <div class="field"><label>Parent ID</label><input id="parentIdDisplay" disabled></div>
+    <div class="field"><label>PIN *</label><input id="parentPin" type="password" inputmode="numeric" placeholder="Create a PIN"></div>
+  </div>
+  <div class="note">Give the parent their generated ID and PIN. The PIN is stored as a SHA-256 hash.</div>
+  <div class="actions"><button class="btn secondary" onclick="closeModal('parentModal')">Cancel</button><button class="btn primary" onclick="saveParent()">Create Parent</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://jpvtyldgmetsejhedsdu.supabase.co';
+const SUPABASE_KEY='sb_publishable_vroD_nN1iQbGCC5MU7Ttpg_ZAA2U7Ax';
+const HEADERS={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'};
+let data={students:[],subjects:[],attendance:[],parents:[]};
+let editingStudent=null, editingSubject=null;
+const today=new Date().toISOString().slice(0,10);
+document.getElementById('attendanceDate').value=today;
+
+const pageInfo={
+ dashboard:['Dashboard','Overview of your attendance system'],
+ students:['Students','Manage your student list'],
+ subjects:['Subjects','Manage subjects and class lists'],
+ attendance:['Take Attendance','Mark attendance for a selected subject'],
+ history:['Attendance History','Review saved attendance records'],
+ parents:['Parents','Create and manage parent access'],
+ parent:['Parent Portal','View your linked child’s attendance']
+};
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+
+async function api(path, options={}) {
+  const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{...options,headers:{...HEADERS,...(options.headers||{})}});
+  const txt=await r.text();
+  if(!r.ok) throw new Error(txt||('Request failed: '+r.status));
+  if(!txt.trim()) return null;
+  try{return JSON.parse(txt)}catch(e){return txt}
+}
+async function loadData(){
+  try{
+    const [students,subjects,links,attendance]=await Promise.all([
+      api('students?select=*&order=roll_number'),
+      api('subjects?select=*&order=code'),
+      api('subject_students?select=subject_id,student_id'),
+      api('attendance?select=id,subject_id,student_id,attendance_date,status&order=attendance_date.desc')
+    ]);
+    data.students=students.map(s=>({id:s.id,roll:s.roll_number,name:s.name,email:s.email||''}));
+    data.subjects=subjects.map(s=>({id:s.id,code:s.code,name:s.name,students:links.filter(l=>l.subject_id===s.id).map(l=>l.student_id)}));
+    data.attendance=attendance.map(a=>({id:a.id,subjectId:a.subject_id,studentId:a.student_id,date:a.attendance_date,status:a.status}));
+    loadData();
+  }catch(e){
+    console.error(e); alert('Could not connect to the online database. Check your Supabase settings and internet connection.');
+  }
+}
+
+
+let editingParent=null;
+async function loadParents(){
+ try{
+   const rows=await api('parents?select=id,parent_id,name,student_id,pin_hash&order=parent_id');
+   data.parents=rows;
+   renderParents();
+ }catch(e){console.error(e)}
+}
+function nextParentId(){
+ const nums=(data.parents||[]).map(p=>parseInt(p.parent_id,10)).filter(n=>!isNaN(n)&&n>=98701);
+ return String(nums.length?Math.max(...nums)+1:98701);
+}
+function openParentModal(id=null){
+ if(currentUser?.role!=='teacher')return;
+ editingParent=id;
+ document.getElementById('parentModalTitle').textContent=id?'Edit Parent':'Add Parent';
+ const p=(data.parents||[]).find(x=>x.id===id);
+ document.getElementById('parentName').value=p?.name||'';
+ document.getElementById('parentPin').value='';
+ const sel=document.getElementById('parentStudent');
+ sel.innerHTML='<option value="">Select child</option>'+data.students.map(s=>`<option value="${s.id}">${esc(s.roll)} — ${esc(s.name)}</option>`).join('');
+ if(p)sel.value=p.student_id;
+ document.getElementById('parentIdDisplay').value=p?.parent_id||nextParentId();
+ document.querySelector('#parentModal .primary').textContent=id?'Save Changes':'Create Parent';
+ document.getElementById('parentModal').classList.add('show');
+}
+async function saveParent(){
+ const name=document.getElementById('parentName').value.trim(),studentId=document.getElementById('parentStudent').value,pin=document.getElementById('parentPin').value;
+ if(!name||!studentId)return alert('Parent name and child are required.');
+ if(!editingParent && !pin)return alert('Create a PIN for this parent.');
+ if(pin && !/^\d{4,}$/.test(pin))return alert('PIN must contain at least 4 digits.');
+ try{
+   const body={name,student_id:studentId};
+   if(pin)body.pin_hash=await sha256(pin);
+   if(editingParent){
+     await api('parents?id=eq.'+editingParent,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(body)});
+   }else{
+     body.parent_id=nextParentId();
+     await api('parents',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(body)});
+   }
+   await loadParents();closeModal('parentModal');toast(editingParent?'Parent updated':'Parent created');editingParent=null;
+ }catch(e){alert('Could not save parent. '+e.message)}
+}
+async function deleteParent(id){
+ if(!confirm('Delete this parent login?'))return;
+ try{await api('parents?id=eq.'+id,{method:'DELETE'});await loadParents();toast('Parent deleted')}catch(e){alert('Could not delete parent. '+e.message)}
+}
+function renderParents(){
+ const body=document.getElementById('parentsBody');if(!body)return;
+ const rows=data.parents||[];
+ body.innerHTML=rows.length?rows.map(p=>{
+   const st=data.students.find(s=>s.id===p.student_id);
+   return `<tr><td><strong>${esc(p.parent_id)}</strong></td><td>${esc(p.name)}</td><td>${st?esc(st.roll)+' — '+esc(st.name):'—'}</td><td><button class="btn secondary" onclick="openParentModal('${p.id}')">Edit</button> <button class="btn danger" onclick="deleteParent('${p.id}')">Delete</button></td></tr>`;
+ }).join(''):'<tr><td colspan="4" class="empty">No parent accounts yet.</td></tr>';
+}
+let currentUser=null;
+function sha256(text){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)).then(buf=>[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join(''))}
+async function login(){
+ const id=document.getElementById('loginId').value.trim(), pin=document.getElementById('loginPin').value;
+ const err=document.getElementById('loginError');err.style.display='none';
+ if(!id||!pin){err.textContent='Enter both Login ID and PIN.';err.style.display='block';return}
+ try{
+   const hash=await sha256(pin);
+   if(id.startsWith('1241')){
+     const rows=await api('teachers?teacher_id=eq.'+encodeURIComponent(id)+'&select=id,teacher_id,name,pin_hash');
+     if(!rows.length||rows[0].pin_hash!==hash){err.textContent='Invalid teacher ID or PIN.';err.style.display='block';return}
+     currentUser={role:'teacher',id:rows[0].id,name:rows[0].name,loginId:id};
+   }else if(id.startsWith('987')){
+     const rows=await api('parents?parent_id=eq.'+encodeURIComponent(id)+'&select=id,parent_id,name,student_id,pin_hash');
+     if(!rows.length||rows[0].pin_hash!==hash){err.textContent='Invalid parent ID or PIN.';err.style.display='block';return}
+     currentUser={role:'parent',id:rows[0].id,name:rows[0].name,loginId:id,studentId:rows[0].student_id};
+   }else{err.textContent='Unknown Login ID.';err.style.display='block';return}
+   sessionStorage.setItem('attendease_user',JSON.stringify(currentUser));
+   applyRole();
+ }catch(e){err.textContent='Login failed. Check your internet connection.';err.style.display='block'}
+}
+function applyRole(){
+ document.getElementById('loginScreen').style.display='none';
+ document.getElementById('roleBadge').textContent=currentUser.role==='teacher'?'Teacher · '+currentUser.loginId:'Parent · '+currentUser.loginId;
+ const teacherOnly=['students','subjects','attendance','history'];
+ document.querySelectorAll('.nav button').forEach(b=>{
+   if(b.dataset.page==='parent') b.style.display=currentUser.role==='parent'?'block':'none';
+   else b.style.display=currentUser.role==='teacher'?'block':'none';
+ });
+ if(currentUser.role==='parent'){
+   showPage('parent'); renderParentDashboard();
+ }else showPage('dashboard');
+}
+function logout(){sessionStorage.removeItem('attendease_user');currentUser=null;document.getElementById('loginScreen').style.display='flex';document.getElementById('loginId').value='';document.getElementById('loginPin').value='';}
+async function renderParentDashboard(){
+ const welcome=document.getElementById('parentWelcome');
+ const summary=document.getElementById('parentChildSummary');
+ const subjectBox=document.getElementById('parentSubjectAttendance');
+ const historyBody=document.getElementById('parentHistoryBody');
+ const pill=document.getElementById('parentOverallPill');
+ if(!currentUser||currentUser.role!=='parent')return;
+
+ const st=data.students.find(s=>s.id===currentUser.studentId);
+ if(!st){
+   welcome.textContent='Parent Portal';
+   pill.textContent='—';
+   summary.innerHTML='<div class="empty">Your linked child could not be found.</div>';
+   subjectBox.innerHTML='';
+   historyBody.innerHTML='';
+   return;
+ }
+
+ welcome.textContent='Welcome, '+currentUser.name;
+ const rows=data.attendance.filter(a=>a.studentId===st.id);
+ const present=rows.filter(a=>a.status==='present').length;
+ const absent=rows.filter(a=>a.status==='absent').length;
+ const rate=rows.length?Math.round(present/rows.length*100):null;
+
+ pill.textContent=rate===null?'No attendance':rate+'% overall';
+ pill.className='pill '+(rate!==null&&rate<75?'absent':'present');
+
+ summary.innerHTML=`<div>
+   <strong style="font-size:18px">${esc(st.name)}</strong>
+   <div class="note">Roll number: ${esc(st.roll)}${st.email?' · '+esc(st.email):''}</div>
+ </div>
+ <div class="parent-summary">
+   <div class="mini-stat"><div class="note">Total classes</div><div class="v">${rows.length}</div></div>
+   <div class="mini-stat"><div class="note">Present</div><div class="v">${present}</div></div>
+   <div class="mini-stat"><div class="note">Absent</div><div class="v">${absent}</div></div>
+ </div>`;
+
+ const subjectRows=data.subjects.map(s=>{
+   const r=rows.filter(a=>a.subjectId===s.id);
+   if(!r.length)return '';
+   const p=r.filter(a=>a.status==='present').length;
+   const pct=Math.round(p/r.length*100);
+   return `<div style="display:flex;justify-content:space-between;gap:15px;padding:13px 0;border-bottom:1px solid var(--border)">
+     <span><strong>${esc(s.code)}</strong> — ${esc(s.name)}</span>
+     <span class="rate">${pct}% (${p}/${r.length})</span>
+   </div>`;
+ }).join('');
+ subjectBox.innerHTML=subjectRows||'<div class="empty">No attendance records yet.</div>';
+
+ const history=rows
+   .slice()
+   .sort((a,b)=>String(b.date).localeCompare(String(a.date)))
+   .slice(0,30);
+
+ historyBody.innerHTML=history.length?history.map(a=>{
+   const s=data.subjects.find(x=>x.id===a.subjectId);
+   return `<tr>
+     <td>${esc(a.date)}</td>
+     <td>${esc(s?.code||'')} — ${esc(s?.name||'')}</td>
+     <td><span class="pill ${a.status==='present'?'present':'absent'}">${a.status==='present'?'Present':'Absent'}</span></td>
+   </tr>`;
+ }).join(''):'<tr><td colspan="3" class="empty">No attendance records yet.</td></tr>';
+}
+function showPage(id){
+ if(!currentUser) return;
+ if(currentUser.role==='parent' && id!=='parent') return;
+ if(currentUser.role==='teacher' && id==='parent') return;
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+ document.getElementById('pageTitle').textContent=pageInfo[id][0];
+ document.getElementById('pageSub').textContent=pageInfo[id][1];
+ document.getElementById('topAction').innerHTML='';
+ if(id==='students') document.getElementById('topAction').innerHTML='<button class="btn primary" onclick="openStudentModal()">+ Add Student</button>';
+ if(id==='subjects') document.getElementById('topAction').innerHTML='<button class="btn primary" onclick="openSubjectModal()">+ Add Subject</button>';
+ if(id==='attendance') populateSubjectSelect('attendanceSubject');
+ if(id==='history') {populateSubjectSelect('historySubject',true);renderHistory();}
+ if(id==='parents') {loadParents();renderParents();}
+ renderAll(); if(window.innerWidth<651) document.getElementById('sidebar').classList.remove('open');
+}
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
+function renderAll(){renderStudents();renderSubjects();renderAttendance();renderDashboard();renderHistory();}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}
+function openStudentModal(id=null){
+ editingStudent=id; document.getElementById('studentModalTitle').textContent=id?'Edit Student':'Add Student';
+ const s=data.students.find(x=>x.id===id)||{roll:'',name:'',email:''};
+ document.getElementById('studentRoll').value=s.roll;document.getElementById('studentName').value=s.name;document.getElementById('studentEmail').value=s.email||'';
+ document.getElementById('studentModal').classList.add('show');
+}
+function openSubjectModal(id=null){
+ editingSubject=id; document.getElementById('subjectModalTitle').textContent=id?'Edit Subject':'Add Subject';
+ const s=data.subjects.find(x=>x.id===id)||{code:'',name:''};
+ document.getElementById('subjectCode').value=s.code;document.getElementById('subjectName').value=s.name;
+ document.getElementById('subjectModal').classList.add('show');
+}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function uid(){return crypto.randomUUID()}
+async function saveStudent(){
+ const roll=document.getElementById('studentRoll').value.trim(),name=document.getElementById('studentName').value.trim(),email=document.getElementById('studentEmail').value.trim();
+ if(!roll||!name)return alert('Roll number and name are required.');
+ if(data.students.some(s=>s.roll.toLowerCase()===roll.toLowerCase()&&s.id!==editingStudent))return alert('That roll number already exists.');
+ try{
+   if(editingStudent) await api('students?id=eq.'+editingStudent,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({roll_number:roll,name,email})});
+   else await api('students',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({roll_number:roll,name,email})});
+   await loadData();closeModal('studentModal');toast(editingStudent?'Student updated':'Student added');editingStudent=null;
+ }catch(e){alert('Could not save student. '+e.message)}
+}
+async function saveSubject(){
+ const code=document.getElementById('subjectCode').value.trim(),name=document.getElementById('subjectName').value.trim();
+ if(!code||!name)return alert('Subject code and name are required.');
+ if(data.subjects.some(s=>s.code.toLowerCase()===code.toLowerCase()&&s.id!==editingSubject))return alert('That subject code already exists.');
+ try{
+   if(editingSubject) await api('subjects?id=eq.'+editingSubject,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({code,name})});
+   else await api('subjects',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({code,name})});
+   await loadData();closeModal('subjectModal');toast(editingSubject?'Subject updated':'Subject added');editingSubject=null;
+ }catch(e){alert('Could not save subject. '+e.message)}
+}
+async function deleteStudent(id){
+ if(!confirm('Delete this student? Their attendance records will also be removed.'))return;
+ try{await api('students?id=eq.'+id,{method:'DELETE'});await loadData();toast('Student deleted')}catch(e){alert('Could not delete student. '+e.message)}
+}
+async function deleteSubject(id){
+ if(!confirm('Delete this subject and its attendance records?'))return;
+ try{await api('subjects?id=eq.'+id,{method:'DELETE'});await loadData();toast('Subject deleted')}catch(e){alert('Could not delete subject. '+e.message)}
+}
+function renderStudents(){
+ const q=(document.getElementById('studentSearch')?.value||'').toLowerCase();
+ const list=data.students.filter(s=>s.name.toLowerCase().includes(q)||s.roll.toLowerCase().includes(q));
+ const body=document.getElementById('studentsBody'); if(!body)return;
+ body.innerHTML=list.length?list.map(s=>`<tr><td>${esc(s.roll)}</td><td><strong>${esc(s.name)}</strong></td><td>${esc(s.email||'—')}</td><td><button class="btn secondary" onclick="openStudentModal('${s.id}')">Edit</button> <button class="btn danger" onclick="deleteStudent('${s.id}')">Delete</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No students yet. Add your first student.</td></tr>';
+}
+function renderSubjects(){
+ const body=document.getElementById('subjectsBody');if(!body)return;
+ body.innerHTML=data.subjects.length?data.subjects.map(s=>`<tr><td><strong>${esc(s.code)}</strong></td><td>${esc(s.name)}</td><td>${(s.students||[]).length}</td><td><button class="btn secondary" onclick="manageClass('${s.id}')">Students</button> <button class="btn secondary" onclick="openSubjectModal('${s.id}')">Edit</button> <button class="btn danger" onclick="deleteSubject('${s.id}')">Delete</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No subjects yet. Add a subject to begin.</td></tr>';
+}
+function manageClass(id){
+ const s=data.subjects.find(x=>x.id===id);
+ const choices=data.students.map(st=>`<label style="display:flex;gap:9px;padding:9px;border-bottom:1px solid #eee"><input type="checkbox" value="${st.id}" ${s.students?.includes(st.id)?'checked':''}> <span>${esc(st.roll)} — ${esc(st.name)}</span></label>`).join('');
+ const box=document.getElementById('subjectModal');box.querySelector('.modal-box').innerHTML=`<div class="modal-head"><h3>Students — ${esc(s.name)}</h3><button class="close" onclick="closeModal('subjectModal')">×</button></div><div style="max-height:55vh;overflow:auto">${choices||'<div class="empty">Add students first.</div>'}</div><div class="actions"><button class="btn secondary" onclick="closeModal('subjectModal')">Cancel</button><button class="btn primary" onclick="saveClass('${id}')">Save Class List</button></div>`;box.classList.add('show');
+}
+async function saveClass(id){
+ const selected=[...document.querySelectorAll('#subjectModal input[type=checkbox]:checked')].map(x=>x.value);
+ try{
+   await api('subject_students?subject_id=eq.'+id,{method:'DELETE'});
+   if(selected.length) await api('subject_students',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(selected.map(student_id=>({subject_id:id,student_id})))});
+   await loadData();closeModal('subjectModal');toast('Class list saved');
+ }catch(e){alert('Could not save class list. '+e.message)}
+}
+function populateSubjectSelect(id,all=false){
+ const el=document.getElementById(id);if(!el)return;const old=el.value;
+ el.innerHTML=(all?'<option value="">All subjects</option>':'<option value="">Select subject</option>')+data.subjects.map(s=>`<option value="${s.id}">${esc(s.code)} — ${esc(s.name)}</option>`).join('');
+ if(data.subjects.some(s=>s.id===old))el.value=old;
+}
+function renderAttendance(){
+ const sub=document.getElementById('attendanceSubject')?.value,date=document.getElementById('attendanceDate')?.value;
+ const box=document.getElementById('attendanceList');if(!box||!sub||!date){if(box)box.innerHTML='<div class="empty">Select a subject and date.</div>';return}
+ const subject=data.subjects.find(s=>s.id===sub), ids=subject.students||[];
+ if(!ids.length){box.innerHTML='<div class="empty">No students assigned to this subject. Go to Subjects → Students.</div>';return}
+ box.innerHTML=ids.map(id=>{const st=data.students.find(x=>x.id===id);if(!st)return'';const rec=data.attendance.find(a=>a.subjectId===sub&&a.date===date&&a.studentId===id);const status=rec?.status||'present';return `<div class="attendance-row"><div><strong>${esc(st.roll)}</strong></div><div>${esc(st.name)}</div><div class="toggle"><button class="${status==='present'?'selected-present':''}" onclick="setTemp('${id}','present',this)">Present</button><button class="${status==='absent'?'selected-absent':''}" onclick="setTemp('${id}','absent',this)">Absent</button></div></div>`}).join('');
+}
+let temp={};
+function setTemp(id,status,btn){temp[id]=status;const row=btn.closest('.attendance-row');row.querySelectorAll('button').forEach(b=>b.classList.remove('selected-present','selected-absent'));btn.classList.add(status==='present'?'selected-present':'selected-absent')}
+async function saveAttendance(){
+ const sub=document.getElementById('attendanceSubject').value,date=document.getElementById('attendanceDate').value;if(!sub||!date)return alert('Select subject and date.');
+ const subject=data.subjects.find(s=>s.id===sub);if(!(subject.students||[]).length)return alert('No students are assigned to this subject.');
+ try{
+   const rows=subject.students.map(id=>({subject_id:sub,student_id:id,attendance_date:date,status:temp[id]||data.attendance.find(a=>a.subjectId===sub&&a.date===date&&a.studentId===id)?.status||'present'}));
+   await api('attendance?on_conflict=subject_id%2Cstudent_id%2Cattendance_date',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(rows)});
+   temp={};await loadData();toast('Attendance saved successfully');
+ }catch(e){alert('Could not save attendance. '+e.message)}
+}
+function renderHistory(){
+ const body=document.getElementById('historyBody');if(!body)return;const sub=document.getElementById('historySubject')?.value||'',date=document.getElementById('historyDate')?.value||'';
+ const groups={};data.attendance.filter(a=>(!sub||a.subjectId===sub)&&(!date||a.date===date)).forEach(a=>{const k=a.subjectId+'|'+a.date;(groups[k]??=[]).push(a)});
+ const rows=Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0])).map(([k,arr])=>{const [sid,d]=k.split('|'),s=data.subjects.find(x=>x.id===sid),p=arr.filter(x=>x.status==='present').length,ab=arr.length-p,rate=Math.round(p/arr.length*100);return `<tr><td>${d}</td><td>${esc(s?.code||'')} — ${esc(s?.name||'')}</td><td>${p}</td><td>${ab}</td><td class="rate">${rate}%</td><td><button class="btn danger" onclick="deleteRecord('${sid}','${d}')">Delete</button></td></tr>`}).join('');
+ body.innerHTML=rows||'<tr><td colspan="6" class="empty">No attendance records found.</td></tr>';
+}
+async function deleteRecord(sid,date){if(!confirm('Delete attendance for this subject and date?'))return;try{await api('attendance?subject_id=eq.'+sid+'&attendance_date=eq.'+date,{method:'DELETE'});await loadData();toast('Attendance deleted')}catch(e){alert('Could not delete attendance. '+e.message)}}
+function subjectRate(sid){const a=data.attendance.filter(x=>x.subjectId===sid);return a.length?Math.round(a.filter(x=>x.status==='present').length/a.length*100):null}
+function renderDashboard(){
+ document.getElementById('statStudents').textContent=data.students.length;document.getElementById('statSubjects').textContent=data.subjects.length;document.getElementById('statRecords').textContent=data.attendance.length;
+ const rate=data.attendance.length?Math.round(data.attendance.filter(x=>x.status==='present').length/data.attendance.length*100):null;document.getElementById('statRate').textContent=rate===null?'—':rate+'%';
+ const box=document.getElementById('dashboardSubjects');if(!data.subjects.length){box.innerHTML='<div class="empty">No subjects added yet.</div>';return}
+ box.innerHTML=data.subjects.map(s=>{const r=subjectRate(s.id);return `<div style="display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)"><span><strong>${esc(s.code)}</strong> — ${esc(s.name)}</span><span class="rate">${r===null?'No data':r+'%'}</span></div>`}).join('');
+}
+
+async function lookupParent(){
+  const roll=document.getElementById('parentRoll').value.trim();
+  const code=document.getElementById('parentCode').value.trim();
+  const result=document.getElementById('parentResult');
+  if(!roll||!code){alert('Enter both the roll number and parent access code.');return}
+  // Temporary prototype lookup. The access-code verification will be moved server-side
+  // when we add Supabase Auth in the next security step.
+  const st=data.students.find(s=>s.roll.toLowerCase()===roll.toLowerCase());
+  if(!st){result.style.display='block';result.innerHTML='<div class="empty">Student not found.</div>';return}
+  // Prototype code format: PARENT-<ROLL>. This is only for testing.
+  if(code.toUpperCase()!=='PARENT-'+st.roll.toUpperCase()){
+    result.style.display='block';result.innerHTML='<div class="empty">Incorrect parent access code.</div>';return
+  }
+  const rows=data.attendance.filter(a=>a.studentId===st.id);
+  const present=rows.filter(a=>a.status==='present').length;
+  const rate=rows.length?Math.round(present/rows.length*100):null;
+  const bySubject=data.subjects.map(s=>{
+    const r=rows.filter(a=>a.subjectId===s.id);
+    if(!r.length)return '';
+    const p=r.filter(a=>a.status==='present').length;
+    return `<div style="display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)"><span><strong>${esc(s.code)}</strong> — ${esc(s.name)}</span><span class="rate">${Math.round(p/r.length*100)}% (${p}/${r.length})</span></div>`;
+  }).join('');
+  result.style.display='block';
+  result.innerHTML=`<div class="section-title"><h2>${esc(st.name)}</h2><span class="pill ${rate!==null&&rate<75?'absent':'present'}">${rate===null?'No attendance':rate+'% overall'}</span></div>
+  <p class="note">Roll number: ${esc(st.roll)}${st.email?' · '+esc(st.email):''}</p>
+  <div class="section"><h3>Subject-wise attendance</h3>${bySubject||'<div class="empty">No attendance records yet.</div>'}</div>`;
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+loadData().then(()=>{
+ const saved=sessionStorage.getItem('attendease_user');
+ if(saved){currentUser=JSON.parse(saved);applyRole();}
+});
+</script>
+</body>
+</html>
